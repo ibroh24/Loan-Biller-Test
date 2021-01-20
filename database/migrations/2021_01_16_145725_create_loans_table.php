@@ -19,8 +19,8 @@ class CreateLoansTable extends Migration
             $table->decimal('loanamount');
             $table->integer('interest');
             $table->integer('loanperiod');
-            $table->string('interestpayable');
-            $table->string('totalrefundable');
+            $table->decimal('interestpayable', 19, 4);
+            $table->decimal('totalrefundable', 19, 4);
             $table->date('startdate');
             $table->date('enddate');
             $table->tinyInteger('paid')->default(0);
