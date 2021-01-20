@@ -38,25 +38,56 @@
                           <tr>
                             <td>
                               @if ($loan->isactive)
-                              <button id="activateLoan{{ $loan->id }}" disabled  class="btn btn-primary btn-sm activateLoan">Activated</button>    
+                              <button id="activateLoan{{ $loan->id }}" disabled  class="btn btn-primary btn-sm activateLoan">Activated</button>
+                              
+                              <form method="POST" action="{{ route('pay') }}" accept-charset="UTF-8" class="form-horizontal" role="form">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <input type="hidden" name="email" value="ibroh24@gmail.com"> 
+                                        <input type="hidden" name="orderID" value="{{ $loan->id }}">
+                                        <input type="hidden" name="amount" value="{{ $loan->totalrefundable}}"> 
+                                        {{-- <input type="hidden" name="quantity" value="3"> --}}
+                                        <input type="hidden" name="currency" value="NGN">
+                                        <input type="hidden" name="metadata" value="{{ json_encode($array = ['key_name' => Auth::user()->id, 'loan_id' => $loan->id]) }}" > 
+                                        <input type="hidden" name="reference" value="{{ Paystack::genTranxRef() }}"> 
+                                        {{ csrf_field() }} 
+                                        
+                                        @if ($loan->paid)
+                                          <button class="btn btn-success btn-sm" disabled value="Pay Now!">
+                                            Paid
+                                          </button>
+                                        @else
+                                        <button class="btn btn-success btn-sm" type="submit" value="Pay Now!">
+                                          Pay
+                                        </button>
+                                        @endif
+                                           
+                                    </div>
+                                </div>
+                            </form>
+
+                              {{-- <button class="btn btn-success btn-sm" onclick="paymentForm('{{ Auth::user()->email }}, {{ $loan->totalrefundable}} ')">Pay</button> --}}
                               @else
                               <button id="activateLoan{{ $loan->id }}" onclick="activateLoan({{ $loan->id }})"  class="btn btn-primary btn-sm activateLoan">Activate</button>
                               @endif
+                            
                               
-                              <button class="btn btn-success btn-sm">Pay</button>
                             </td>
-                            <td>{{ number_format((int)$loan->loanamount, 2, '.', ',') }}</td>
-                            <td>{{ number_format((int)$loan->interestpayable, 2, '.', ',') }}</td>
-                            <td>{{ number_format((int)$loan->totalrefundable, 2, '.', ',') }}</td>
-                            <td>{{ $loan->startdate->format('M d, Y') }}</td>
-                            <td>{{ $loan->enddate->format('M d, Y') }}</td>
-                            <td>{{ $loan->isactive == 0 ? "False" : "True" }}</td>
-                            <td>{{ $loan->paid == 0 ? "False" : "True" }}</td>
+                            <td id="">{{ number_format((int)$loan->loanamount, 2, '.', ',') }}</td>
+                            <td id="">{{ number_format((int)$loan->interestpayable, 2, '.', ',') }}</td>
+                            <td id="amountToPay">{{ number_format((int)$loan->totalrefundable, 2, '.', ',') }}</td>
+                            <td id="">{{ $loan->startdate->format('M d, Y') }}</td>
+                            <td id="">{{ $loan->enddate->format('M d, Y') }}</td>
+                            <td id="">{{ $loan->isactive == 0 ? "False" : "True" }}</td>
+                            <td id="">{{ $loan->paid == 0 ? "False" : "True" }}</td>
                            
                           </tr>
                       @endforeach
                   @else
-                      
+                      <tr >
+                        <td class="text-center" colspan="8">No Data to Display</td>
+                      </tr>
+
                   @endif
                 </tbody>
             </table>
@@ -161,9 +192,15 @@
     </div>
   </div>
 
+<!--
+<form action="{{ route('pay') }}" id="paymentCredentials" method="post">
+    {{-- dynamic form --}}
+  </form>
+-->
 @endsection
 @section('script')
   <script>  
+
     $(document).ready(function () {
         $('#loanamount').change(function () { 
           let principalAmount =  $('#loanamount').val()
@@ -205,41 +242,45 @@
     
     });
 
+    /*
+    function paymentForm(userMail, amount){
+      return $("#paymentCredentials").append(`{{ csrf_field() }}<input class="form-control" type='hidden'  id='${userMail}' name='${userMail}' value='${userMail}'><input class="form-control" type='hidden' id='${amount}' name='${amount}' value='${amount}'><input type="hidden" name="reference" value="{{ Paystack::genTranxRef() }}">`);
+    }
+    */
+       
     function activateLoan(id){
-        $.ajax({
-                url: "/approve/"+id,
-                //{{ route('loan.approve', ['id'=>"loanID"])}}",
-                type: 'GET',
-                contentType: 'application/json',
-                data: id,
-                 success:function(data){
-                   console.log(id);
-                     console.log(data)
-                     $('#activateLoan'+id).attr('disabled', true)
-                     $('#activateLoan'+id).html('processing...');
-                     if(data.status){                         
-                        setTimeout(function()
-                        {
-                        alert(data.message);
-                        location.reload();
-                        },2000);
-                        
-                     }
-                     else{
-                        // one loan is active already
-                         setTimeout(function()
-                         {
-                          alert(data.message);
-                          location.reload();
-                         },2000);
-                         
-                     }
+      $.ajax({
+          url: "/approve/"+id,
+          type: 'GET',
+          contentType: 'application/json',
+          data: id,
+            success:function(data){
+                console.log(data)
+                $('#activateLoan'+id).attr('disabled', true)
+                $('#activateLoan'+id).html('processing...');
+                if(data.status){                         
+                  setTimeout(function()
+                  {
+                  alert(data.message);
+                  location.reload();
+                  },2000);
+                  
+                }
+                else{
+                  // one loan is active already
+                    setTimeout(function()
+                    {
+                    alert(data.message);
+                    location.reload();
+                    },2000);
                     
-                 }, 
-                 error: function(xhr, status,error){
-                     console.log(error)
-                 }
-             })
+                }
+              
+            }, 
+            error: function(xhr, status,error){
+                console.log(error)
+            }
+        });
       }
   </script>
     

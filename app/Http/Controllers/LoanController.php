@@ -70,7 +70,7 @@ class LoanController extends Controller
             // $check = [];
             for ($i=0; $i < count($allUserLoan); $i++) { 
                 // $check = $allUserLoan[$i];
-                if($allUserLoan[$i]->isactive == 1 ){
+                if($allUserLoan[$i]->isactive == 1 && $allUserLoan[$i]->paid != 1 ){
                     return response()->json([
                         'status' => false, 'message' => ucwords('an active loan is still available')
                     ]);
@@ -96,10 +96,26 @@ class LoanController extends Controller
     // payment
     public function redirectToGateway()
     {
+
+        
         try{
             return Paystack::getAuthorizationUrl()->redirectNow();
         }catch(\Exception $e) {
             return Redirect::back()->withMessage(['msg'=>'The paystack token has expired. Please refresh the page and try again.', 'type'=>'error']);
         }        
+    }
+
+    public function handleGatewayCallback()
+    {
+        $paymentDetails = Paystack::getPaymentData();
+
+        // dd($paymentDetails);
+        if($paymentDetails['status']){
+            // then update the loan table
+            $id = $paymentDetails['data']['metadata']['key_name'];
+            $this->loanRepository->update($paymentDetails['data']['metadata']['loan_id'], 'paid', 1);
+            return redirect()->route('home', ['userid' => $id]);
+        }
+       
     }
 }

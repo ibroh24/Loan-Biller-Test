@@ -32,13 +32,14 @@ class LoanRepository implements RepositoryInterface
     public function update($id, $column, $val)
     {
         return DB::table('loans')
-                    ->where([
-                        'id' => $id,
-                        'userid' => Auth::User()->id
-                    ])
-                    ->update([
-                        $column => $val
-                    ]);
+        ->where([
+            'id' => $id,
+            // 'userid' => Auth::User()->id
+        ])
+        ->update([
+            $column => $val
+        ]);
+       
     }
 
     public function isPaymentDue()

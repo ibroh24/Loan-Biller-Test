@@ -21,4 +21,4 @@ Route::get('/home', 'LoanController@index')->name('home');
 Route::post('/home', 'LoanController@newLoan')->name('loan');
 Route::get('/approve/{loanID}', 'LoanController@approveLoan')->name('loan.approve');
 Route::post('/pay', 'LoanController@redirectToGateway')->name('pay');
-Route::get('/payment/callback', 'LoanController@handleGatewayCallback');
+Route::get('/payment/callback', 'LoanController@handleGatewayCallback')->name('loan.response');
